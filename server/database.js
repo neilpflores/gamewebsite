@@ -70,21 +70,7 @@ const database_commands = {
 			}
 		);
 	},
-	insertLocation: (req, res) => {
-		checkDB();
-		con.query(
-			"INSERT INTO location (name, address, seats, latitude, longitude) VALUES (?, ?, ?, ?, ?)",
-			[req.body.name, req.body.address, req.body.seats, req.body.latitude, req.body.longitude],
-			(err, results) => {
-				if (err) {
-					console.error(err);
-					res.status(500).json({ error: "Error inserting data into database" });
-				} else {
-					res.status(200).json({ message: "Location created successfully", results });
-				}
-			}
-		);
-	},
+
 	insertReview: (req, res) => {
 		checkDB();
 		con.query(
@@ -99,20 +85,6 @@ const database_commands = {
 					return res.status(500).json({ error: "Error inserting data into database" });
 				}
 				res.status(200).json({ message: "Review created successfully", results });
-			}
-		);
-	},
-	insertTicket: (req, res) => {
-		checkDB();
-		con.query(
-			"INSERT INTO ticket (event_id, user_id, purchase_date, quantity, amount_paid) VALUES (?, ?, ?, ?, ?)",
-			[req.body.event_id, req.body.user_id, req.body.purchase_date, req.body.quantity, req.body.amount_paid],
-			(err, results) => {
-				if (err) {
-					console.error(err);
-					return res.status(500).json({ error: "Error inserting data into database" });
-				}
-				res.status(200).json({ message: "Ticket created successfully", results });
 			}
 		);
 	},
@@ -203,21 +175,7 @@ const database_commands = {
 			callback(null, results[0]);
 		});
 	},
-	getLocationByID: (id, res) => {
-		checkDB();
-		con.query("SELECT * FROM location WHERE id = ?", [id], (err, results) => {
-			if (err) {
-				console.error(err);
-				res.status(500).json({ error: "Error retrieving location details" });
-			} else {
-				if (results.length === 0) {
-					res.status(404).json({ error: "Location not found" });
-				} else {
-					res.status(200).json(results[0]);
-				}
-			}
-		});
-	},
+
 	getEventStatistics: (eventId, callback) => {
 		checkDB();
 		con.query(
