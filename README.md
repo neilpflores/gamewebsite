@@ -32,7 +32,7 @@
      
  
  ```bash
- docker exec -it event-manager-db-1 /bin/bash
+ docker exec -it game-website-db-1 /bin/bash
  mysql -u root -p
  ```
  ```
