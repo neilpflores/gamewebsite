@@ -1,0 +1,35 @@
+.leaderboard {
+    padding: 2rem;
+    color: #333; /* Darker text color for general text */
+}
+
+.leaderboard table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 2rem;
+}
+
+.leaderboard th, .leaderboard td {
+    padding: 1rem;
+    border: 1px solid #ddd;
+    text-align: center;
+    color: #333; /* Ensure text in the table cells is also darker */
+}
+
+.leaderboard th {
+    background-color: #f4f4f4;
+    color: #2c3e50; /* Darker color for table headers */
+}
+
+.leaderboard tr:hover {
+    background-color: #f9f9f9;
+}
+
+.leaderboard a {
+    text-decoration: none;
+    color: #3498db;
+}
+
+.leaderboard a:hover {
+    text-decoration: underline;
+}

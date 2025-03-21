@@ -1,52 +1,64 @@
 services:
   db:
     image: mysql:8.0
+    container_name: mysql_db
+    restart: always
     environment:
-      # Sets environment variables for the database configuration
-      - MYSQL_DATABASE=appdb # Specifies the name of the database
-      - MYSQL_PASSWORD=pass123 # Sets the password for the MySQL user
-      - MYSQL_ROOT_PASSWORD=pass123 # Sets the root password for MySQL
+      - MYSQL_DATABASE=gamedb
+      - MYSQL_PASSWORD=pass123
+      - MYSQL_ROOT_PASSWORD=pass123
     networks:
       - sqlNetwork
     ports:
-      - 3307:3306 # Maps the container's port 3306 to the host's port 3307
+      - "3307:3306"  
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       interval: 10s
       timeout: 5s
       retries: 5
     volumes:
-      - ./database:/tmp/database
-    command: mysqld --init-file="/tmp/database/schema.sql"
+      - db_data:/var/lib/mysql  # Persistent storage for MySQL
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql # Initializes schema on first run
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/seed.sql # add characters
 
   api:
-    # Defines the 'api' service for the backend API
+    container_name: backend_api
     build:
-      # Builds the backend API using the provided Dockerfile
-      context: ./server # Specifies the build context directory for the backend
-      dockerfile: Dockerfile # Specifies the Dockerfile to use for building the backend
+      context: ./server
+      dockerfile: Dockerfile
+    restart: always
     ports:
-      - 3000:3000 # Maps the container's port 3000 to the host's port 3000
+      - "3000:3000"
     networks:
       - sqlNetwork
     depends_on:
       db:
-        condition: service_healthy # Specifies that the 'api' service depends on the 'db' service being healthy
+        condition: service_healthy
+    environment:
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=pass123
+      - DB_NAME=gamedb
+      - DB_PORT=3306
+      - SECRET_KEY=BANANA_STAND
 
   client:
-    # Defines the 'frontend' service for the frontend app
-    restart: on-failure # Restarts the container if it fails
+    container_name: frontend_client
+    restart: on-failure
     build:
-      # Builds the frontend app using the provided Dockerfile
-      context: ./client # Specifies the build context directory for the frontend
+      context: ./client
     ports:
-      - 3001:3000 # Maps the container's port 3000 to the host's port 3001
+      - "3001:3000"
     networks:
-      - sqlNetwork # Connects the service to the 'sqlNetwork' network
+      - sqlNetwork
     depends_on:
-      - api # Specifies that the 'frontend' service depends on the 'api' service
+      api:
+        condition: service_started
 
 networks:
   sqlNetwork:
-    # Defines the network
-    driver: bridge # Specifies the network driver as 'bridge'
+    driver: bridge
+
+volumes:
+  db_data:
+    driver: local  # Persistent MySQL data
