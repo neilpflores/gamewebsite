@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import "./Leaderboard.css"; 
+import "./Leaderboard.css";
 
 const Leaderboard = () => {
   const [leaderboard, setLeaderboard] = useState([]);
 
   useEffect(() => {
-    // Fetch leaderboard data
+    // Fetch leaderboard data from your API
     axios
-      .get("http://localhost:3000/leaderboard")
+      .get("http://localhost:3000/leaderboard")  // Update this to match your backend API URL
       .then((response) => {
         setLeaderboard(response.data);
       })
@@ -36,7 +36,7 @@ const Leaderboard = () => {
               <td>
                 <Link to={`/profile/${player.id}`}>{player.username}</Link>
               </td>
-              <td>{player.score}</td>
+              <td>{player.score}</td> {/* Display player score from API */}
             </tr>
           ))}
         </tbody>

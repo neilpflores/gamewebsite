@@ -8,7 +8,7 @@ const GamePage = () => {
     selectedAction: null,
     happinessScores: [0, 0, 0],
     gameStarted: false,
-    timeRemaining: 60, // 60 seconds countdown
+    timeRemaining: 10, // 60 seconds countdown
     currentRound: 1,
     gameOver: false, // Track game over state
   });
@@ -112,7 +112,17 @@ const GamePage = () => {
       shuffledCharacters.slice(6, 9),
     ]);
   };
-
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const response = await axios.get("http://localhost:3000/reviews");
+        setReviews(response.data);
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      }
+    };
+    fetchReviews();
+  }, []);
   useEffect(() => {
     if (gameState.gameStarted && gameState.timeRemaining > 0) {
       const timer = setInterval(() => {
@@ -124,26 +134,56 @@ const GamePage = () => {
       return () => clearInterval(timer);
     }
 
-    if (gameState.timeRemaining === 0) {
-      // When the timer runs out, end the game
+    if (gameState.timeRemaining === 0 && !gameState.gameOver) {
       setGameState((prevState) => ({
         ...prevState,
         gameOver: true,
       }));
-      // Store the total happiness score as the player's score
-      savePlayerScore(totalHappiness);
+      savePlayerScore(totalHappiness); // Ensure score is saved only once
     }
   }, [gameState.gameStarted, gameState.timeRemaining]);
 
-  const savePlayerScore = (score) => {
-    // Call API to save the score to the backend or save it to the local storage for leaderboard usage
-    console.log("Player score saved:", score);
-  };
+  const savePlayerScore = async (score) => {
+    
+    try {
+      const token = localStorage.getItem("token");
+      
+      if (!token) return;
 
+      const userId = JSON.parse(atob(token.split('.')[1])).id;
+      if (!userId) {
+        alert("You must be logged in to submit a review.");
+        return;
+      }
+      await axios.post(
+        "http://localhost:3000/save-score",
+        {
+          user_id: userId,
+          round_number: gameState.currentRound,
+          action: gameState.selectedAction || 'none',
+          circle_selected: gameState.selectedCircle + 1,
+          happiness_score: score,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Error saving player score:", error);
+    }
+  };
+  // Handle review submit
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
     const userId = token ? JSON.parse(atob(token.split('.')[1])).id : null;
+
+    if (!userId) {
+      alert("You must be logged in to submit a review.");
+      return;
+    }
 
     try {
       const response = await axios.post(
@@ -152,12 +192,19 @@ const GamePage = () => {
           user_id: userId,
           rating: newReview.rating,
           comment: newReview.comment,
+          timestamp: new Date().toISOString(), // Add timestamp
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
-      setReviews([...reviews, response.data]);
+      
+      setReviews((prevReviews) => [...prevReviews, response.data]);
       setNewReview({ rating: 0, comment: "" });
     } catch (error) {
-      console.error("Error submitting review:", error);
+      console.error("Error submitting review:",  error.response || error);
       alert("Failed to submit review.");
     }
   };
@@ -232,46 +279,43 @@ const GamePage = () => {
         ))}
       </div>
 
-      <div className="reviews-section">
+      {/* Review Section */}
+      <section className="reviews-section">
         <h3>Reviews</h3>
+        <ul>
         {reviews.length > 0 ? (
-          <ul>
-            {reviews.map((review, index) => (
-              <li key={index}>
-                <strong>Rating:</strong> {review.rating} <br />
-                <strong>Comment:</strong> {review.comment} <br />
-                <strong>Time:</strong> {review.timestamp}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No reviews yet.</p>
-        )}
+            reviews.map((review) => (
+              <div key={review.id} className="review-item">
+                <p><strong>{review.username}</strong></p> {/* Display the username */}
+                <p>Rating: {review.rating}</p>
+                <p>{review.comment}</p>
+                <p><em>{new Date(review.timestamp).toLocaleString()}</em></p> {/* Display timestamp */}
+              </div>
+            ))
+          ) : (
+            <p>No reviews yet.</p>
+          )}       
+        </ul>
 
-        <h3>Write a Review</h3>
         <form onSubmit={handleReviewSubmit}>
-          <label>
-            Rating (0-5):
-            <input
-              type="number"
-              name="rating"
-              value={newReview.rating}
-              onChange={handleReviewChange}
-              min="0"
-              max="5"
-            />
-          </label>
-          <label>
-            Comment:
-            <textarea
-              name="comment"
-              value={newReview.comment}
-              onChange={handleReviewChange}
-            />
-          </label>
+          <input
+            type="number"
+            name="rating"
+            value={newReview.rating}
+            onChange={handleReviewChange}
+            placeholder="Rating (1-5)"
+            min="0"
+            max="5"
+          />
+          <textarea
+            name="comment"
+            value={newReview.comment}
+            onChange={handleReviewChange}
+            placeholder="Your Comment"
+          ></textarea>
           <button type="submit">Submit Review</button>
         </form>
-      </div>
+      </section>
     </div>
   );
 };

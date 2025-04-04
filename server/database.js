@@ -91,6 +91,7 @@ const database_commands = {
         });
     },
 
+
     /**
      *  GAME LOGIC ========================================================================
      */
@@ -155,6 +156,25 @@ getLeaderboard: (query, callback) => {
     });
 },
 
+// Insert a Score (Game Round)
+insertScore: (scoreData, callback) => {
+    checkDB();
+    const query = "INSERT INTO game_round (user_id, round_number, action, circle_selected, happiness_score) VALUES (?, ?, ?, ?, ?)";
+    
+    console.log("Executing query with values:", scoreData);  // Log the values
+
+    con.query(query, [scoreData.user_id, scoreData.round_number, scoreData.action, scoreData.circle_selected, scoreData.happiness_score], 
+    (err, results) => {
+        if (err) {
+            console.error("Error saving score:", err);  // Log any error
+            return callback(err, null);
+        }
+        console.log("Insert result:", results);  // Log the results from the database
+        callback(null, results);
+    });
+},
+
+
     /**
      *  REVIEWS ========================================================================
      */
@@ -163,7 +183,7 @@ getLeaderboard: (query, callback) => {
     insertReview: (reviewData, callback) => {
         checkDB();
         con.query(
-            "INSERT INTO review (user_id, rating, comment) VALUES (?, ?, ?)",
+            "INSERT INTO review (user_id, rating, comment, timestamp) VALUES (?, ?, ?, NOW())",
             [reviewData.user_id, reviewData.rating, reviewData.comment],
             (err, results) => {
                 if (err) {
@@ -174,11 +194,12 @@ getLeaderboard: (query, callback) => {
             }
         );
     },
+    
 
     // Retrieve All Reviews
     getAllReviews: (callback) => {
         checkDB();
-        con.query("SELECT * FROM review", (err, results) => {
+        con.query("SELECT * FROM review r JOIN user u ON r.user_id = u.id ORDER BY r.timestamp DESC;", (err, results) => { //reviews + UserId to username
             if (err) {
                 console.error("Error fetching reviews:", err);
                 return callback(err, null);
@@ -188,6 +209,7 @@ getLeaderboard: (query, callback) => {
     }
     
 };
+
 
 
 module.exports = { databaseInit, checkDB, database_commands };

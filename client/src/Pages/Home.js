@@ -11,7 +11,7 @@ function Home() {
     if (token) {
       // Fetch User Info
       axios
-        .get("http://localhost:3000/user/me", {
+        .get("http://localhost:3000/profile/me", {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {
@@ -31,7 +31,7 @@ function Home() {
         <div>
           <h2>Welcome, {user.username}</h2>
           {/* Navigate to profile page */}
-          <button onClick={() => window.location.href = `/profile/${user.id}`}>Go to your profile</button>
+          <button onClick={() => window.location.href = `/profile/me`}>Go to your profile</button>
         </div>
       )}
 

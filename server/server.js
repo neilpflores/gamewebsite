@@ -15,18 +15,21 @@ app.use(bodyParser.json());
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 db.databaseInit(); // Initialize database
-
 // Middleware: Authenticate JWT Token
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) return res.sendStatus(401);
+
     jwt.verify(token, SECRET_KEY, (err, user) => {
         if (err) return res.sendStatus(403);
+
+        // Log before calling next() to ensure user is populated
         req.user = user;
+        console.log(`Authenticated user: ${req.user.username}, Role: ${req.user.user_role}`);
+
         next();
     });
-    console.log(`Authenticated user: ${req.user.username}, Role: ${req.user.user_role}`); 
 };
 
 /**
@@ -94,6 +97,56 @@ app.post('/register', async (req, res) => {
           console.log("User registered successfully:", result);  // Log the result of the insertion
           res.status(201).json({ message: "User registered successfully!" });
       }
+    );
+});
+
+// Guest login route
+app.post('/guest-login', async (req, res) => {
+    console.log('Guest login request received');
+
+    // Generate a random username and email for guest (you can modify this as needed)
+    const guestUsername = `GuestUser_${Date.now()}`;
+    const guestEmail = `${guestUsername}@example.com`;
+
+    const guestUser = {
+        first_name: 'Admin',
+        last_name: 'User',
+        username: guestUsername,
+        email: 'g@g',
+        password: 'admin', // You can use a default password for guest users
+    };
+
+    // Hash the password for the guest user (similar to regular user registration)
+    const hashedPassword = await bcrypt.hash(guestUser.password, 10);
+
+    db.database_commands.insertUser(
+        { 
+            first_name: guestUser.first_name,
+            last_name: guestUser.last_name,
+            username: guestUser.username,
+            email: guestUser.email,
+            password: hashedPassword,
+        },
+        (err, result) => {
+            if (err) {
+                console.error("Error inserting guest user:", err);
+                return res.status(500).json({ error: "Error inserting guest user into database" });
+            }
+
+            // Create a JWT token for the guest user
+            const token = jwt.sign({ id: result.insertId, username: guestUser.username, user_role: guestUser.user_role }, 'your_jwt_secret', { expiresIn: '1h' });
+
+            console.log("Guest user registered successfully:", result);
+            res.status(200).json({ 
+                message: 'Guest user registered successfully!',
+                token, // Send token along with the response
+                user: {
+                    id: result.insertId,
+                    username: guestUser.username,
+                    user_role: guestUser.user_role,
+                }
+            });
+        }
     );
 });
 
@@ -258,37 +311,61 @@ function calculateHappiness(circle, action) {
  *       500:
  *         description: Error submitting the review
  */
-
 // Review submission endpoint
 app.post('/review', authenticateToken, (req, res) => {
     const { rating, comment } = req.body;
-    db.database_commands.insertReview({
-        user_id: req.user.id,
-        rating,
-        comment
-    }, (err, result) => {
-        if (err) return res.status(500).send('Error submitting review');
-        res.status(201).json({ message: 'Review submitted successfully!' });
-    });
-});
-// Endpoint to handle review submission
-app.post('/submit-review', authenticateToken, (req, res) => {
-    const { rating, comment } = req.body;
-    const userId = req.user.id;
   
     if (!rating || !comment) {
       return res.status(400).send('Rating and comment are required');
     }
-  
-    // Assuming `db.database_commands.insertReview` is a function that handles saving to the DB
-    db.database_commands.insertReview({ user_id: userId, rating, comment }, (err, result) => {
-      if (err) {
-        console.error('Error submitting review:', err);
-        return res.status(500).send('Error submitting review');
-      }
+
+    db.database_commands.insertReview({
+      user_id: req.user.id,
+      rating,
+      comment
+    }, (err, result) => {
+      if (err) return res.status(500).send('Error submitting review');
       res.status(201).json({ message: 'Review submitted successfully!' });
     });
   });
+  
+  // POST request to save player score to game_round table
+app.post('/save-score', authenticateToken, (req, res) => {
+  //const { roundNumber, action, circleSelected, happinessScore } = req.body;
+  const userId = req.user.id;
+  const roundNumber = req.body.round_number;
+  const action = req.body.action;
+  const circleSelected = req.body.circle_selected;
+  const happinessScore = req.body.happiness_score;
+  // Log the received data and userId to ensure it's correct
+  console.log("Received score data:", req.body);
+  console.log("Authenticated user ID:", userId);
+  
+  if (!userId || !roundNumber || !action || !circleSelected || !happinessScore) {
+    console.log('Missing required fields. UserId:', userId, 'Round:', roundNumber, 'Action:', action, 'Circle:', circleSelected, 'Happiness:', happinessScore);
+    return res.status(400).json({ error: 'Missing required fields check server.js' });
+    
+  }
+
+  const scoreData = {
+    user_id: userId,
+    round_number: parseInt(roundNumber,10),
+    action: action,
+    circle_selected: parseInt(circleSelected, 10),
+    happiness_score: parseInt(happinessScore,10)
+  };
+
+  db.database_commands.insertScore(scoreData, (err, result) => {
+    if (err) {
+      console.error("Error saving score:", err);
+      return res.status(500).json({ error: 'Failed to save score' });
+    }
+    res.status(201).json({ message: 'Score saved successfully!' });
+  });
+});
+
+  
+
   
 
 /**
@@ -378,7 +455,7 @@ app.get('/reviews', (req, res) => {
 });
 /**
  * @swagger
- * /user/me:
+ * /profile/me:
  *   get:
  *     summary: Get current user details
  *     tags: [Users]

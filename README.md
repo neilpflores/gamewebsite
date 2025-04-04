@@ -18,10 +18,19 @@
  ```
  
  5. Access the webapp at `http://localhost:3001`
- 
+ 6. Access Swagger documentation at `http://localhost:3000/api-docs/`
  This app uses Docker, which is a tool that allows us to package our application and its dependencies into a container that can run exactly the same on any machine.
  
- ### Database Credentials
+## fake email: g@g   fake pw: admin
+ 
+### Useful Commands
+ ```bash
+    docker compose down -v                                                                 (removes build)
+    docker exec -it mysql_db mysql -u root -ppass123 -e "SELECT * FROM `user`;" gamedb     (Displays User table)
+    docker logs frontend_client
+    docker logs backend_api
+ ```
+ #### Database Credentials
  
      Host: localhost
      Port: 3307

@@ -11,6 +11,7 @@ const Register = () => {
     username: "",  // Added username field
     user_role: "player", 
   });
+  const [message, setMessage] = useState(""); //
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -26,11 +27,15 @@ const Register = () => {
         const response = await axios.post("http://localhost:3000/register", user);
         if (response.status === 201) {
             console.log("User registered:", response.data);
+            alert("Registration successful! You will be redirected to the login page.");
+            setMessage("Registration successful! Redirecting to login...");
             window.location.href = "/login"; // Redirect to login page after successful registration
         } else {
+          alert("Registration failed. Please try again.");
             throw new Error("Failed to register user");
         }
     } catch (error) {
+      setMessage("Registration failed. Please try again.");
         console.error("Error registering user:", error);
         alert("Failed to register user. Please try again.");
     }
@@ -61,15 +66,10 @@ const Register = () => {
           Password:
           <input type="password" name="password" value={user.password} onChange={handleChange} />
         </label>
-        <label>
-          Role:
-          <select name="user_role" value={user.user_role} onChange={handleChange}>
-            <option value="player">Player</option>
-            <option value="admin">Admin</option>
-          </select>
-        </label>
         <button type="submit">Register</button>
       </form>
+      {/* Show message here */}
+      {message && <div className="popup-message">{message}</div>}
 
       {/* Link to login page */}
       <p>Already have an account? <Link to="/login">Login here</Link></p>

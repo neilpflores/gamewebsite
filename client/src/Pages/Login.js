@@ -28,20 +28,53 @@ const Login = () => {
         }
     };
 
+    const handleGuestLogin = async () => {
+        try {
+            const response = await axios.post("http://localhost:3000/guest-login");
+            console.log("Guest user logged in:", response.data);
+            
+            // Store token in local storage
+            localStorage.setItem("token", response.data.token);
+    
+            // You can also store user information if needed
+            localStorage.setItem("user", JSON.stringify(response.data.user));
+    
+            // Redirect to home page after guest login
+            window.location.href = "/"; 
+        } catch (error) {
+            console.error("Error logging in as guest:", error);
+            alert("Failed to log in as guest. Please try again.");
+        }
+    };
+    
+
     return (
         <div className="container">
             <h1>Login</h1>
             <form onSubmit={handleSubmit}>
                 <label>
                     Email:
-                    <input type="email" name="email" value={credentials.email} onChange={handleChange} />
+                    <input
+                        type="email"
+                        name="email"
+                        value={credentials.email}
+                        onChange={handleChange}
+                    />
                 </label>
                 <label>
                     Password:
-                    <input type="password" name="password" value={credentials.password} onChange={handleChange} />
+                    <input
+                        type="password"
+                        name="password"
+                        value={credentials.password}
+                        onChange={handleChange}
+                    />
                 </label>
                 <button type="submit">Login</button>
             </form>
+
+            {/* Guest Login Button */}
+            <button onClick={handleGuestLogin}>Login as Guest</button>
         </div>
     );
 };
