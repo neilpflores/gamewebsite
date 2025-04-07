@@ -21,23 +21,41 @@ const GamePage = () => {
 
   const [totalHappiness, setTotalHappiness] = useState(0); // Track total happiness
 
-  const [circles, setCircles] = useState([
-    [{ name: "Sam", likes: ["compliment"], dislikes: ["help"] }],
-    [{ name: "Alex", likes: ["help"], dislikes: ["compliment"] }],
-    [{ name: "Jordan", likes: ["invite to event"], dislikes: [] }],
-  ]);
 
-  const characters = [
-    { name: "Sam", likes: ["compliment"], dislikes: ["help"] },
-    { name: "Alex", likes: ["help"], dislikes: ["compliment"] },
-    { name: "Jordan", likes: ["invite to event"], dislikes: [] },
-    { name: "Jamie", likes: ["compliment"], dislikes: ["invite to event"] },
-    { name: "Taylor", likes: ["help"], dislikes: ["compliment"] },
-    { name: "Morgan", likes: ["invite to event"], dislikes: ["help"] },
-    { name: "Pat", likes: ["compliment"], dislikes: ["help"] },
-    { name: "Chris", likes: ["offer help"], dislikes: ["compliment"] },
-    { name: "Jordan", likes: ["invite to event"], dislikes: ["compliment"] },
-  ];
+  const [characters, setCharacters] = useState([]);
+  const [circles, setCircles] = useState([]);
+
+  useEffect(() => {
+    axios.get("http://localhost:3000/characters")
+      .then((response) => {
+        console.log("Fetched characters:", response.data);
+        const formattedCharacters = response.data.map(char => ({
+          ...char,
+          likes:
+            typeof char.likes === "string"
+              ? char.likes.split(",").map(item => item.trim())
+              : char.likes,
+          dislikes:
+            typeof char.dislikes === "string"
+              ? char.dislikes.split(",").map(item => item.trim())
+              : char.dislikes,
+        }));
+        setCharacters(formattedCharacters);
+        if (formattedCharacters.length > 0) {
+          const shuffled = [...formattedCharacters].sort(() => Math.random() - 0.5);
+          const groupSize = 3;
+          const newCircles = [];
+          for (let i = 0; i < shuffled.length; i += groupSize) {
+            newCircles.push(shuffled.slice(i, i + groupSize));
+          }
+          console.log("Grouped circles:", newCircles);
+          setCircles(newCircles);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching characters:", error);
+      });
+  }, []);
 
   const calculateHappiness = (action, character) => {
     let happinessChange = 0;
@@ -99,19 +117,20 @@ const GamePage = () => {
   };
 
   const nextRound = () => {
-    setGameState({
-      ...gameState,
-      currentRound: gameState.currentRound + 1,
-    });
-
-    // Randomize groups
-    const shuffledCharacters = [...characters].sort(() => Math.random() - 0.5);
-    setCircles([
-      shuffledCharacters.slice(0, 3),
-      shuffledCharacters.slice(3, 6),
-      shuffledCharacters.slice(6, 9),
-    ]);
+    setGameState((prevState) => ({ ...prevState, currentRound: prevState.currentRound + 1 }));
+    if (characters.length > 0) {
+      const shuffled = [...characters].sort(() => Math.random() - 0.5);
+      const groupSize = 3;
+      const newCircles = [];
+      for (let i = 0; i < shuffled.length; i += groupSize) {
+        newCircles.push(shuffled.slice(i, i + groupSize));
+      }
+      setCircles(newCircles);
+    }
   };
+
+    //
+    
   useEffect(() => {
     const fetchReviews = async () => {
       try {
