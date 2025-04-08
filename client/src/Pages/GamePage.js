@@ -2,28 +2,29 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./GamePage.css"; 
 
-const GamePage = () => {
-  const [gameState, setGameState] = useState({
-    selectedCircle: null,
-    selectedAction: null,
-    happinessScores: [0, 0, 0],
-    gameStarted: false,
-    timeRemaining: 10, // 60 seconds countdown
-    currentRound: 1,
-    gameOver: false, // Track game over state
-  });
+// 1. Define the initial state object
+const initialGameState = {
+  selectedCircle: null,
+  selectedAction: null,
+  happinessScores: [0, 0, 0],
+  gameStarted: false,
+  timeRemaining: 10, // reset timer value here (use 60 if desired)
+  currentRound: 1,
+  gameOver: false,
+};
 
+const GamePage = () => {
+  const [gameState, setGameState] = useState(initialGameState);
   const [reviews, setReviews] = useState([]);
   const [newReview, setNewReview] = useState({
     rating: 0,
     comment: "",
   });
-
   const [totalHappiness, setTotalHappiness] = useState(0);
   const [characters, setCharacters] = useState([]);
   const [circles, setCircles] = useState([]);
 
-  //fetches and groups initial characters
+  // Fetch and group initial characters
   useEffect(() => {
     axios.get("http://localhost:3000/characters")
       .then((response) => {
@@ -56,7 +57,7 @@ const GamePage = () => {
       });
   }, []);
 
-  //calculates you happiness level whenever you click one of the game buttons
+  // Calculates happiness
   const calculateHappiness = (action, character) => {
     let happinessChange = 0;
     switch (action) {
@@ -87,8 +88,7 @@ const GamePage = () => {
     return happinessChange;
   };
 
-  //Makes sure you can't do random actions if the game hasn't started or the game is over
-  //otherwise it will update happiness and start next round
+  // Handle action selection; calculates happiness then starts next round
   const handleActionSelection = (circleIndex, action) => {
     if (!gameState.gameStarted || gameState.gameOver) return;
     const newHappinessScores = [...gameState.happinessScores];
@@ -99,7 +99,6 @@ const GamePage = () => {
       happinessChangeInRound += happinessChange;
     });
     setTotalHappiness((prevTotal) => prevTotal + happinessChangeInRound);
-
     setGameState({
       ...gameState,
       selectedCircle: circleIndex,
@@ -109,12 +108,13 @@ const GamePage = () => {
     nextRound();
   };
 
-  //starts the game
+  // 2. Updated startGame to reset the entire game state
   const startGame = () => {
-    setGameState({ ...gameState, gameStarted: true });
+    setGameState({ ...initialGameState, gameStarted: true });
+    setTotalHappiness(0);
   };
 
-  //starts the next round within the game
+  // Next round grouping logic remains the same
   const nextRound = () => {
     setGameState((prevState) => ({ ...prevState, currentRound: prevState.currentRound + 1 }));
     if (characters.length > 0) {
@@ -128,20 +128,7 @@ const GamePage = () => {
     }
   };
 
-  //fetches reviews from the database
-  useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        const response = await axios.get("http://localhost:3000/reviews");
-        setReviews(response.data);
-      } catch (error) {
-        console.error("Error fetching reviews:", error);
-      }
-    };
-    fetchReviews();
-  }, []);
-
-  //makes the timer go down
+  // Timer logic: decrease timeRemaining, and call savePlayerScore when time runs out
   useEffect(() => {
     if (gameState.gameStarted && gameState.timeRemaining > 0) {
       const timer = setInterval(() => {
@@ -152,24 +139,17 @@ const GamePage = () => {
       }, 1000);
       return () => clearInterval(timer);
     }
-
     if (gameState.timeRemaining === 0 && !gameState.gameOver) {
-      setGameState((prevState) => ({
-        ...prevState,
-        gameOver: true,
-      }));
-      savePlayerScore(totalHappiness); // Ensure score is saved only once
+      setGameState((prevState) => ({ ...prevState, gameOver: true }));
+      savePlayerScore(totalHappiness);
     }
   }, [gameState.gameStarted, gameState.timeRemaining]);
 
-  //saves the player score in the database?
+  // Save score to the database
   const savePlayerScore = async (score) => {
-    
     try {
       const token = localStorage.getItem("token");
-      
       if (!token) return;
-
       const userId = JSON.parse(atob(token.split('.')[1])).id;
       if (!userId) {
         alert("You must be logged in to submit a review.");
@@ -185,9 +165,7 @@ const GamePage = () => {
           happiness_score: score,
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
     } catch (error) {
@@ -195,17 +173,15 @@ const GamePage = () => {
     }
   };
 
-  // Handle review submit
+  // Handle review form submission
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
     const userId = token ? JSON.parse(atob(token.split('.')[1])).id : null;
-
     if (!userId) {
       alert("You must be logged in to submit a review.");
       return;
     }
-
     try {
       const response = await axios.post(
         "http://localhost:3000/review",
@@ -213,37 +189,29 @@ const GamePage = () => {
           user_id: userId,
           rating: newReview.rating,
           comment: newReview.comment,
-          timestamp: new Date().toISOString(), // Add timestamp
+          timestamp: new Date().toISOString(),
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-      
       setReviews((prevReviews) => [...prevReviews, response.data]);
       setNewReview({ rating: 0, comment: "" });
     } catch (error) {
-      console.error("Error submitting review:",  error.response || error);
+      console.error("Error submitting review:", error.response || error);
       alert("Failed to submit review.");
     }
   };
 
-  //handles the review change
   const handleReviewChange = (e) => {
     const { name, value } = e.target;
-    setNewReview((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setNewReview((prev) => ({ ...prev, [name]: value }));
   };
 
-  //main game page html
+  // Render the component
   return (
     <div className="game-page">
       <h1>Game Page</h1>
-
       <div className="total-happiness">
         <h3>Total Happiness: {totalHappiness}</h3>
       </div>
@@ -251,9 +219,10 @@ const GamePage = () => {
       {!gameState.gameStarted && !gameState.gameOver && (
         <button onClick={startGame}>Start Game</button>
       )}
-      
+
+      {/* Show Restart Game only if the game is over */}
       {gameState.gameOver && (
-        <button type="submit" onClick="window.location.reload();">Restart Game</button>
+        <button type="button" onClick={startGame}>Restart Game</button>
       )}
 
       {gameState.gameStarted && gameState.timeRemaining > 0 && (
@@ -268,7 +237,7 @@ const GamePage = () => {
           <p>Your total happiness score is {totalHappiness}</p>
         </div>
       )}
-      {/* Displays Parts of the game */}
+
       <div className="game-circles">
         <h3>Select a Circle and Action</h3>
         {circles.map((circle, index) => (
@@ -306,24 +275,22 @@ const GamePage = () => {
         ))}
       </div>
 
-      {/* Review Section */}
       <section className="reviews-section">
         <h3>Reviews</h3>
         <ul>
-        {reviews.length > 0 ? (
+          {reviews.length > 0 ? (
             reviews.map((review) => (
               <div key={review.id} className="review-item">
-                <p><strong>{review.username}</strong></p> {/* Display the username */}
+                <p><strong>{review.username}</strong></p>
                 <p>Rating: {review.rating}</p>
                 <p>{review.comment}</p>
-                <p><em>{new Date(review.timestamp).toLocaleString()}</em></p> {/* Display timestamp */}
+                <p><em>{new Date(review.timestamp).toLocaleString()}</em></p>
               </div>
             ))
           ) : (
             <p>No reviews yet.</p>
-          )}       
+          )}
         </ul>
-
         <form onSubmit={handleReviewSubmit}>
           <input
             type="number"
