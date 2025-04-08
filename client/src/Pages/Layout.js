@@ -2,6 +2,7 @@ import React from "react";
 import { Outlet, Link, useNavigate } from "react-router-dom"; // Keep Link here
 import "./Layout.css"; 
 
+//layout of top part of the website
 const Layout = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
@@ -11,7 +12,7 @@ const Layout = () => {
       localStorage.removeItem("token");
       navigate("/login");
   };
-
+//html to display it
   return (
       <div className="layout">
           <nav className="navbar">

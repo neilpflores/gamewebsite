@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import "./Leaderboard.css";
 
+//This file shows the leaderboard
 const Leaderboard = () => {
   const [leaderboard, setLeaderboard] = useState([]);
 

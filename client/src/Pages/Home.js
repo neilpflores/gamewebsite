@@ -4,7 +4,7 @@ import "./mvp.css";
 
 function Home() {
   const [user, setUser] = useState(null);
-
+  //fetches user data
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -22,7 +22,7 @@ function Home() {
         });
     }
   }, []);
-
+//homepage html code
   return (
     <div className="home-page">
       <h1>Welcome to the Social Circles Game</h1>

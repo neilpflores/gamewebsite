@@ -4,6 +4,7 @@ import axios from "axios";
 const Characters = () => {
   const [characters, setCharacters] = useState([]);
 
+  //fetches characters
   useEffect(() => {
     axios
       .get("http://localhost:3000/characters") // Ensure this API endpoint exists in your backend
@@ -15,6 +16,7 @@ const Characters = () => {
       });
   }, []);
 
+  //html that shows all the characters
   return (
     <div className="characters-page">
       <h1>Game Characters</h1>

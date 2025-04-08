@@ -19,12 +19,11 @@ const GamePage = () => {
     comment: "",
   });
 
-  const [totalHappiness, setTotalHappiness] = useState(0); // Track total happiness
-
-
+  const [totalHappiness, setTotalHappiness] = useState(0);
   const [characters, setCharacters] = useState([]);
   const [circles, setCircles] = useState([]);
 
+  //fetches and groups initial characters
   useEffect(() => {
     axios.get("http://localhost:3000/characters")
       .then((response) => {
@@ -57,6 +56,7 @@ const GamePage = () => {
       });
   }, []);
 
+  //calculates you happiness level whenever you click one of the game buttons
   const calculateHappiness = (action, character) => {
     let happinessChange = 0;
     switch (action) {
@@ -87,9 +87,10 @@ const GamePage = () => {
     return happinessChange;
   };
 
+  //Makes sure you can't do random actions if the game hasn't started or the game is over
+  //otherwise it will update happiness and start next round
   const handleActionSelection = (circleIndex, action) => {
-    if (!gameState.gameStarted || gameState.gameOver) return; // Don't allow action if the game is over
-
+    if (!gameState.gameStarted || gameState.gameOver) return;
     const newHappinessScores = [...gameState.happinessScores];
     let happinessChangeInRound = 0;
     circles[circleIndex].forEach((character) => {
@@ -97,8 +98,6 @@ const GamePage = () => {
       newHappinessScores[circleIndex] += happinessChange;
       happinessChangeInRound += happinessChange;
     });
-
-    // Update total happiness
     setTotalHappiness((prevTotal) => prevTotal + happinessChangeInRound);
 
     setGameState({
@@ -107,15 +106,15 @@ const GamePage = () => {
       selectedAction: action,
       happinessScores: newHappinessScores,
     });
-
-    // Start the next round with randomized groups
     nextRound();
   };
 
+  //starts the game
   const startGame = () => {
     setGameState({ ...gameState, gameStarted: true });
   };
 
+  //starts the next round within the game
   const nextRound = () => {
     setGameState((prevState) => ({ ...prevState, currentRound: prevState.currentRound + 1 }));
     if (characters.length > 0) {
@@ -129,8 +128,7 @@ const GamePage = () => {
     }
   };
 
-    //
-    
+  //fetches reviews from the database
   useEffect(() => {
     const fetchReviews = async () => {
       try {
@@ -142,6 +140,8 @@ const GamePage = () => {
     };
     fetchReviews();
   }, []);
+
+  //makes the timer go down
   useEffect(() => {
     if (gameState.gameStarted && gameState.timeRemaining > 0) {
       const timer = setInterval(() => {
@@ -162,6 +162,7 @@ const GamePage = () => {
     }
   }, [gameState.gameStarted, gameState.timeRemaining]);
 
+  //saves the player score in the database?
   const savePlayerScore = async (score) => {
     
     try {
@@ -193,6 +194,7 @@ const GamePage = () => {
       console.error("Error saving player score:", error);
     }
   };
+
   // Handle review submit
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
@@ -228,6 +230,7 @@ const GamePage = () => {
     }
   };
 
+  //handles the review change
   const handleReviewChange = (e) => {
     const { name, value } = e.target;
     setNewReview((prev) => ({
@@ -236,6 +239,7 @@ const GamePage = () => {
     }));
   };
 
+  //main game page html
   return (
     <div className="game-page">
       <h1>Game Page</h1>
@@ -246,6 +250,10 @@ const GamePage = () => {
 
       {!gameState.gameStarted && !gameState.gameOver && (
         <button onClick={startGame}>Start Game</button>
+      )}
+      
+      {gameState.gameOver && (
+        <button type="submit" onClick="window.location.reload();">Restart Game</button>
       )}
 
       {gameState.gameStarted && gameState.timeRemaining > 0 && (
@@ -260,7 +268,7 @@ const GamePage = () => {
           <p>Your total happiness score is {totalHappiness}</p>
         </div>
       )}
-
+      {/* Displays Parts of the game */}
       <div className="game-circles">
         <h3>Select a Circle and Action</h3>
         {circles.map((circle, index) => (
