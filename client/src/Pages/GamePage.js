@@ -197,6 +197,7 @@ const GamePage = () => {
       );
       setReviews((prevReviews) => [...prevReviews, response.data]);
       setNewReview({ rating: 0, comment: "" });
+      fetchReviews(); //Refresh the reviewtable
     } catch (error) {
       console.error("Error submitting review:", error.response || error);
       alert("Failed to submit review.");
@@ -207,7 +208,19 @@ const GamePage = () => {
     const { name, value } = e.target;
     setNewReview((prev) => ({ ...prev, [name]: value }));
   };
-
+  //fetches reviews from the database
+  const fetchReviews = async () => {
+    try {
+      const response = await axios.get("http://localhost:3000/reviews");
+      setReviews(response.data); 
+    } catch (error) {
+      console.error("Failed to fetch reviews:", error);
+    }
+  };
+  useEffect(() => {
+    fetchReviews();
+  }, []);
+  
   // Render the component
   return (
     <div className="game-page">
@@ -276,7 +289,7 @@ const GamePage = () => {
       </div>
 
       <section className="reviews-section">
-        <h3>Reviews</h3>
+        <h3>Reviews </h3>
         <ul>
           {reviews.length > 0 ? (
             reviews.map((review) => (

@@ -27,8 +27,11 @@
   
   .reviews-section {
     margin-top: 2rem;
+    padding: 1rem;
+    background-color: #fff;
+    border-radius: 10px;
   }
-  
+    
   .reviews-section ul {
     list-style-type: none;
     padding: 0;
@@ -52,4 +55,22 @@
   .reviews-section form button:hover {
     background-color: #45a049;
   }
+  .review-item {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .review-item p {
+    margin: 0.3rem 0;
+  }
+  
+  .review-item strong {
+    font-size: 1.1rem;
+    color: #2a6edb;
+  }
+
   

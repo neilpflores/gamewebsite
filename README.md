@@ -21,7 +21,7 @@
  6. Access Swagger documentation at `http://localhost:3000/api-docs/`
  This app uses Docker, which is a tool that allows us to package our application and its dependencies into a container that can run exactly the same on any machine.
  
-## fake email: g@g   fake pw: admin
+### fake email: g@g   fake pw: admin
  
 ### Useful Commands
  ```bash
@@ -30,7 +30,7 @@
     docker logs frontend_client
     docker logs backend_api
  ```
- #### Database Credentials
+ ### Database Credentials
  
      Host: localhost
      Port: 3307
