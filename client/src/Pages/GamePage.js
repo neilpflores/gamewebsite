@@ -2,43 +2,62 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./GamePage.css"; 
 
-const GamePage = () => {
-  const [gameState, setGameState] = useState({
-    selectedCircle: null,
-    selectedAction: null,
-    happinessScores: [0, 0, 0],
-    gameStarted: false,
-    timeRemaining: 10, // 60 seconds countdown
-    currentRound: 1,
-    gameOver: false, // Track game over state
-  });
+// 1. Define the initial state object
+const initialGameState = {
+  selectedCircle: null,
+  selectedAction: null,
+  happinessScores: [0, 0, 0],
+  gameStarted: false,
+  timeRemaining: 10, // reset timer value here (use 60 if desired)
+  currentRound: 1,
+  gameOver: false,
+};
 
+const GamePage = () => {
+  const [gameState, setGameState] = useState(initialGameState);
   const [reviews, setReviews] = useState([]);
   const [newReview, setNewReview] = useState({
     rating: 0,
     comment: "",
   });
+  const [totalHappiness, setTotalHappiness] = useState(0);
+  const [characters, setCharacters] = useState([]);
+  const [circles, setCircles] = useState([]);
 
-  const [totalHappiness, setTotalHappiness] = useState(0); // Track total happiness
+  // Fetch and group initial characters
+  useEffect(() => {
+    axios.get("http://localhost:3000/characters")
+      .then((response) => {
+        console.log("Fetched characters:", response.data);
+        const formattedCharacters = response.data.map(char => ({
+          ...char,
+          likes:
+            typeof char.likes === "string"
+              ? char.likes.split(",").map(item => item.trim())
+              : char.likes,
+          dislikes:
+            typeof char.dislikes === "string"
+              ? char.dislikes.split(",").map(item => item.trim())
+              : char.dislikes,
+        }));
+        setCharacters(formattedCharacters);
+        if (formattedCharacters.length > 0) {
+          const shuffled = [...formattedCharacters].sort(() => Math.random() - 0.5);
+          const groupSize = 3;
+          const newCircles = [];
+          for (let i = 0; i < shuffled.length; i += groupSize) {
+            newCircles.push(shuffled.slice(i, i + groupSize));
+          }
+          console.log("Grouped circles:", newCircles);
+          setCircles(newCircles);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching characters:", error);
+      });
+  }, []);
 
-  const [circles, setCircles] = useState([
-    [{ name: "Sam", likes: ["compliment"], dislikes: ["help"] }],
-    [{ name: "Alex", likes: ["help"], dislikes: ["compliment"] }],
-    [{ name: "Jordan", likes: ["invite to event"], dislikes: [] }],
-  ]);
-
-  const characters = [
-    { name: "Sam", likes: ["compliment"], dislikes: ["help"] },
-    { name: "Alex", likes: ["help"], dislikes: ["compliment"] },
-    { name: "Jordan", likes: ["invite to event"], dislikes: [] },
-    { name: "Jamie", likes: ["compliment"], dislikes: ["invite to event"] },
-    { name: "Taylor", likes: ["help"], dislikes: ["compliment"] },
-    { name: "Morgan", likes: ["invite to event"], dislikes: ["help"] },
-    { name: "Pat", likes: ["compliment"], dislikes: ["help"] },
-    { name: "Chris", likes: ["offer help"], dislikes: ["compliment"] },
-    { name: "Jordan", likes: ["invite to event"], dislikes: ["compliment"] },
-  ];
-
+  // Calculates happiness
   const calculateHappiness = (action, character) => {
     let happinessChange = 0;
     switch (action) {
@@ -69,9 +88,9 @@ const GamePage = () => {
     return happinessChange;
   };
 
+  // Handle action selection; calculates happiness then starts next round
   const handleActionSelection = (circleIndex, action) => {
-    if (!gameState.gameStarted || gameState.gameOver) return; // Don't allow action if the game is over
-
+    if (!gameState.gameStarted || gameState.gameOver) return;
     const newHappinessScores = [...gameState.happinessScores];
     let happinessChangeInRound = 0;
     circles[circleIndex].forEach((character) => {
@@ -79,50 +98,37 @@ const GamePage = () => {
       newHappinessScores[circleIndex] += happinessChange;
       happinessChangeInRound += happinessChange;
     });
-
-    // Update total happiness
     setTotalHappiness((prevTotal) => prevTotal + happinessChangeInRound);
-
     setGameState({
       ...gameState,
       selectedCircle: circleIndex,
       selectedAction: action,
       happinessScores: newHappinessScores,
     });
-
-    // Start the next round with randomized groups
     nextRound();
   };
 
+  // 2. Updated startGame to reset the entire game state
   const startGame = () => {
-    setGameState({ ...gameState, gameStarted: true });
+    setGameState({ ...initialGameState, gameStarted: true });
+    setTotalHappiness(0);
   };
 
+  // Next round grouping logic remains the same
   const nextRound = () => {
-    setGameState({
-      ...gameState,
-      currentRound: gameState.currentRound + 1,
-    });
-
-    // Randomize groups
-    const shuffledCharacters = [...characters].sort(() => Math.random() - 0.5);
-    setCircles([
-      shuffledCharacters.slice(0, 3),
-      shuffledCharacters.slice(3, 6),
-      shuffledCharacters.slice(6, 9),
-    ]);
-  };
-  useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        const response = await axios.get("http://localhost:3000/reviews");
-        setReviews(response.data);
-      } catch (error) {
-        console.error("Error fetching reviews:", error);
+    setGameState((prevState) => ({ ...prevState, currentRound: prevState.currentRound + 1 }));
+    if (characters.length > 0) {
+      const shuffled = [...characters].sort(() => Math.random() - 0.5);
+      const groupSize = 3;
+      const newCircles = [];
+      for (let i = 0; i < shuffled.length; i += groupSize) {
+        newCircles.push(shuffled.slice(i, i + groupSize));
       }
-    };
-    fetchReviews();
-  }, []);
+      setCircles(newCircles);
+    }
+  };
+
+  // Timer logic: decrease timeRemaining, and call savePlayerScore when time runs out
   useEffect(() => {
     if (gameState.gameStarted && gameState.timeRemaining > 0) {
       const timer = setInterval(() => {
@@ -133,23 +139,17 @@ const GamePage = () => {
       }, 1000);
       return () => clearInterval(timer);
     }
-
     if (gameState.timeRemaining === 0 && !gameState.gameOver) {
-      setGameState((prevState) => ({
-        ...prevState,
-        gameOver: true,
-      }));
-      savePlayerScore(totalHappiness); // Ensure score is saved only once
+      setGameState((prevState) => ({ ...prevState, gameOver: true }));
+      savePlayerScore(totalHappiness);
     }
   }, [gameState.gameStarted, gameState.timeRemaining]);
 
+  // Save score to the database
   const savePlayerScore = async (score) => {
-    
     try {
       const token = localStorage.getItem("token");
-      
       if (!token) return;
-
       const userId = JSON.parse(atob(token.split('.')[1])).id;
       if (!userId) {
         alert("You must be logged in to submit a review.");
@@ -165,26 +165,23 @@ const GamePage = () => {
           happiness_score: score,
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
     } catch (error) {
       console.error("Error saving player score:", error);
     }
   };
-  // Handle review submit
+
+  // Handle review form submission
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
     const userId = token ? JSON.parse(atob(token.split('.')[1])).id : null;
-
     if (!userId) {
       alert("You must be logged in to submit a review.");
       return;
     }
-
     try {
       const response = await axios.post(
         "http://localhost:3000/review",
@@ -192,41 +189,40 @@ const GamePage = () => {
           user_id: userId,
           rating: newReview.rating,
           comment: newReview.comment,
-          timestamp: new Date().toISOString(), // Add timestamp
+          timestamp: new Date().toISOString(),
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-      
       setReviews((prevReviews) => [...prevReviews, response.data]);
       setNewReview({ rating: 0, comment: "" });
     } catch (error) {
-      console.error("Error submitting review:",  error.response || error);
+      console.error("Error submitting review:", error.response || error);
       alert("Failed to submit review.");
     }
   };
 
   const handleReviewChange = (e) => {
     const { name, value } = e.target;
-    setNewReview((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setNewReview((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Render the component
   return (
     <div className="game-page">
       <h1>Game Page</h1>
-
       <div className="total-happiness">
         <h3>Total Happiness: {totalHappiness}</h3>
       </div>
 
       {!gameState.gameStarted && !gameState.gameOver && (
         <button onClick={startGame}>Start Game</button>
+      )}
+
+      {/* Show Restart Game only if the game is over */}
+      {gameState.gameOver && (
+        <button type="button" onClick={startGame}>Restart Game</button>
       )}
 
       {gameState.gameStarted && gameState.timeRemaining > 0 && (
@@ -279,24 +275,22 @@ const GamePage = () => {
         ))}
       </div>
 
-      {/* Review Section */}
       <section className="reviews-section">
         <h3>Reviews</h3>
         <ul>
-        {reviews.length > 0 ? (
+          {reviews.length > 0 ? (
             reviews.map((review) => (
               <div key={review.id} className="review-item">
-                <p><strong>{review.username}</strong></p> {/* Display the username */}
+                <p><strong>{review.username}</strong></p>
                 <p>Rating: {review.rating}</p>
                 <p>{review.comment}</p>
-                <p><em>{new Date(review.timestamp).toLocaleString()}</em></p> {/* Display timestamp */}
+                <p><em>{new Date(review.timestamp).toLocaleString()}</em></p>
               </div>
             ))
           ) : (
             <p>No reviews yet.</p>
-          )}       
+          )}
         </ul>
-
         <form onSubmit={handleReviewSubmit}>
           <input
             type="number"

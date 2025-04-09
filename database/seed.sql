@@ -8,9 +8,16 @@ INSERT INTO `user` (username, email, password, first_name, last_name, user_role)
 
 -- Now insert characters
 INSERT INTO `characters` (name, likes, dislikes) VALUES
-('Sam', 'compliment', 'offer help'),
-('Alex', 'invite to event', 'compliment'),
-('Jamie', 'offer help', 'invite to event');
+('Sam','compliment','offer help'),
+('Alex','offer help','compliment'),
+('Jake','invite to event',''),
+('Jamie','compliment','invite to event'),
+('Taylor','offer help','compliment'),
+('Morgan','invite to event','offer help'),
+('Pat','compliment','offer help'),
+('Chris','offer help','compliment'),
+('Jordan','invite to event','compliment');
+
 
 -- Insert action_effects
 INSERT INTO `action_effect` (character_id, action, happiness_change) VALUES

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-
+//shows the user their profile
 const Profile = () => {
   const { userId } = useParams(); // Get user ID from URL if viewing another profile
   const [user, setUser] = useState(null);
