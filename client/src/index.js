@@ -12,6 +12,7 @@ import Profile from "./Pages/Profile"; // Added Profile
 import Login from "./Pages/Login";
 import Register from "./Pages/Register";
 
+//main application function
 export default function App() {
   return (
     <BrowserRouter>

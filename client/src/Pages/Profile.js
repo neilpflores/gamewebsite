@@ -13,7 +13,7 @@ const Profile = () => {
       navigate("/login"); // Redirect if user is not logged in
       return;
     }
-
+    //gets the user
     const fetchUser = async () => {
       try {
         const endpoint = userId ? `/user/${userId}` : "/profile/me";
@@ -30,7 +30,7 @@ const Profile = () => {
   }, [userId, navigate]);
 
   if (!user) return <div>Loading...</div>;
-
+  //main html code
   return (
     <div className="profile">
       <h1>{user.username}'s Profile</h1>

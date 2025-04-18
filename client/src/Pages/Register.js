@@ -12,7 +12,7 @@ const Register = () => {
     user_role: "player", 
   });
   const [message, setMessage] = useState(""); //
-
+  //handles changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setUser((prev) => ({
@@ -20,7 +20,7 @@ const Register = () => {
       [name]: value,
     }));
   };
-
+  //handles the submit register user button
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -41,7 +41,7 @@ const Register = () => {
     }
 };
 
-
+  //main html code
   return (
     <div className="container">
       <h1>Register</h1>

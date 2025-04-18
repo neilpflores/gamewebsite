@@ -6,7 +6,7 @@ const Login = () => {
         email: "",
         password: "",
     });
-
+    //handles changes to login
     const handleChange = (e) => {
         const { name, value } = e.target;
         setCredentials((prev) => ({
@@ -14,7 +14,7 @@ const Login = () => {
             [name]: value,
         }));
     };
-
+    //handles login submit button
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -27,7 +27,7 @@ const Login = () => {
             alert("Failed to log in. Please try again.");
         }
     };
-
+    //handles the guest login
     const handleGuestLogin = async () => {
         try {
             const response = await axios.post("http://localhost:3000/guest-login");
@@ -47,7 +47,7 @@ const Login = () => {
         }
     };
     
-
+    //main html code
     return (
         <div className="container">
             <h1>Login</h1>
