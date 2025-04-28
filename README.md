@@ -21,7 +21,7 @@
  6. Access Swagger documentation at `http://localhost:3000/api-docs/`
  This app uses Docker, which is a tool that allows us to package our application and its dependencies into a container that can run exactly the same on any machine.
  
-### fake email: g@g   fake pw: admin
+## fake email: g@g   fake pw: admin
  
 ### Useful Commands
  ```bash
@@ -44,4 +44,13 @@
  docker exec -it game-website-db-1 /bin/bash
  mysql -u root -p
  ```
- ```
+ 
+ ### Credits
+ 
+ Neil Flores
+ Liam Worsley
+ John McMahon
+
+ Original setup/design Pulled from Neil's previous website project with
+ Samuel Vader
+ Madelyn Holveck
