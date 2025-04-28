@@ -20,8 +20,16 @@ const Login = () => {
         try {
             const response = await axios.post("http://localhost:3000/login", credentials);
             console.log("User logged in:", response.data);
-            localStorage.setItem("token", response.data.token); // Save token to local storage
-            window.location.href = "/"; // Redirect to home page
+            const token = response.data.token;
+            localStorage.setItem("token", token);
+            const profileResponse = await axios.get("http://localhost:3000/profile/me", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (profileResponse.data.active === false) {
+                alert("Your account is inactive. Please contact support.");
+                localStorage.removeItem("token");
+                return;
+            }
         } catch (error) {
             console.error("Error logging in:", error);
             alert("Failed to log in. Please try again.");

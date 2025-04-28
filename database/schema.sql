@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS `user` (  -- Escape 'user' table name
     `first_name` VARCHAR(50),
     `last_name` VARCHAR(50),
     `user_role` VARCHAR(20) DEFAULT 'player',  -- Escape 'role' column name
-    `best_score` INT DEFAULT 0
+    `best_score` INT DEFAULT 0,
     `active` BOOLEAN DEFAULT TRUE
 );
 
