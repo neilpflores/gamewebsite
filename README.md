@@ -55,7 +55,7 @@
  John McMahon
 
 
- Original setup/design Pulled from Neil's previous website project with
+ Original setup/design inspired/pulled from Neil's previous website project with
 
  Samuel Vader
 
