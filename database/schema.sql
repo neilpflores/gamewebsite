@@ -9,7 +9,9 @@ CREATE TABLE IF NOT EXISTS `user` (  -- Escape 'user' table name
     `password` VARCHAR(300) NOT NULL,
     `first_name` VARCHAR(50),
     `last_name` VARCHAR(50),
-    `user_role` VARCHAR(20) DEFAULT 'player'  -- Escape 'role' column name
+    `user_role` VARCHAR(20) DEFAULT 'player',  -- Escape 'role' column name
+    `best_score` INT DEFAULT 0,
+    `active` BOOLEAN DEFAULT TRUE
 );
 
 

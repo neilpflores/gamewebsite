@@ -486,6 +486,36 @@ app.get('/profile/me', authenticateToken, (req, res) => {
     });
 });
 
+/**
+ * @swagger
+ * /profile/me/inactive:
+ *   patch:
+ *     summary: Mark current user as inactive
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []  # Requires JWT token
+ *     responses:
+ *       200:
+ *         description: User marked as inactive successfully
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+// Make current user inactive
+app.patch('/profile/me/inactive', authenticateToken, (req, res) => {
+    const userId = req.user.id;
+    const query = 'UPDATE `user` SET `active` = FALSE WHERE `id` = ?';
+    db.pool.query(query, [userId], (err, result) => {
+        if (err) {
+            console.error('Error updating user to inactive:', err);
+            return res.status(500).json({ message: 'Server error' });
+        }
+        res.json({ message: 'User account marked as inactive.' });
+    });
+});
+
+
 // get admin
 app.get('/admin', authenticateToken, (req, res) => {
     if (req.user.user_role !== 'admin') {  

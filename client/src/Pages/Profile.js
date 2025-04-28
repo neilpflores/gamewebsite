@@ -13,7 +13,7 @@ const Profile = () => {
       navigate("/login"); // Redirect if user is not logged in
       return;
     }
-
+    //gets the user
     const fetchUser = async () => {
       try {
         const endpoint = userId ? `/user/${userId}` : "/profile/me";
@@ -29,8 +29,26 @@ const Profile = () => {
     fetchUser();
   }, [userId, navigate]);
 
-  if (!user) return <div>Loading...</div>;
+  const handleMakeInactive = async () => {
+    const confirm = window.confirm("Are you sure you want to make your account inactive?");
+    if (!confirm) return;
+  
+    try {
+      const token = localStorage.getItem("token");
+      await axios.patch(`http://localhost:3000/profile/me/inactive`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert("Account marked as inactive.");
+      navigate("/");
+    } catch (error) {
+      console.error("Error making user inactive:", error);
+      alert("Failed to make account inactive. Please try again.");
+    }
+  };
+  
 
+  if (!user) return <div>Loading...</div>;
+  //main html code
   return (
     <div className="profile">
       <h1>{user.username}'s Profile</h1>
@@ -42,8 +60,8 @@ const Profile = () => {
         <Link to="/profile/me">My Profile</Link> |{" "}
         <Link to="/">Home</Link>
       </nav>
-
-      <h3>Game History</h3>
+      <button onClick={handleMakeInactive}>Make Inactive</button>
+     {/* <h3>Game History</h3>
       <ul>
         {user.gameHistory && user.gameHistory.length > 0 ? (
           user.gameHistory.map((game, index) => (
@@ -55,7 +73,7 @@ const Profile = () => {
         ) : (
           <p>No past games found.</p>
         )}
-      </ul>
+      </ul> */}
     </div>
   );
 };
