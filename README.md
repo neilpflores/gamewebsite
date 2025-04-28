@@ -48,9 +48,15 @@
  ### Credits
  
  Neil Flores
+
+ 
  Liam Worsley
+ 
  John McMahon
 
+
  Original setup/design Pulled from Neil's previous website project with
+
  Samuel Vader
+
  Madelyn Holveck
